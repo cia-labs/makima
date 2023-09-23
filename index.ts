@@ -1,7 +1,7 @@
-import { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder } from 'discord.js';
-import { PingCommand } from './commands/ping';
-import { RegisterUser } from './commands/cloudflare/register-users';
-import { GetAccountsCommand } from './commands/cloudflare/list-accounts';
+import { Client, GatewayIntentBits, REST, Routes } from 'discord.js';
+
+import { RegisterUser } from '@/commands/cloudflare/register-users';
+import { GetAccountsCommand } from '@/commands/cloudflare/list-accounts';
 
 const client = new Client({
     intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],

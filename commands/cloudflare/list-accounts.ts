@@ -1,5 +1,5 @@
 import { CacheType, ChatInputCommandInteraction, MessageContextMenuCommandInteraction, SlashCommandBuilder, UserContextMenuCommandInteraction } from "discord.js";
-import { getEmailRoutingAddresses } from "../../lib/cf";
+import { getEmailRoutingAddresses } from "@/lib/cf";
 
 const command = new SlashCommandBuilder()
     .setName('list-accounts')

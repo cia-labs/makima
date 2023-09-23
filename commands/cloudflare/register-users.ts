@@ -1,6 +1,6 @@
 import { CacheType, ChatInputCommandInteraction, MessageContextMenuCommandInteraction, SlashCommandBuilder, UserContextMenuCommandInteraction } from "discord.js";
-import { validateEmail } from "../../lib/utils";
-import { getEmailRoutingAddresses, createEmailRoutingAddress, createCialabsEmail } from "../../lib/cf";
+import { validateEmail } from "@/lib/utils";
+import { getEmailRoutingAddresses, createEmailRoutingAddress, createCialabsEmail } from "@/lib/cf";
 
 const command = new SlashCommandBuilder()
     .setName('register')
