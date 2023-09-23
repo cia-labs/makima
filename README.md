@@ -1,4 +1,5 @@
-# makima
+# Makima
+Discord bot to control ark
 
 To install dependencies:
 
