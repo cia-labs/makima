@@ -13,7 +13,6 @@ const clientId = String(process.env.CLIENT) as string;
 const commands = [
     RegisterUser,
     GetAccountsCommand
-    // PingCommand,
 ];
 
 const rest = new REST({ version: '10' }).setToken(token);
@@ -38,7 +37,6 @@ client.on('interactionCreate', async interaction => {
             await com.execute(interaction)
         }
     }
-
 
 });
 
