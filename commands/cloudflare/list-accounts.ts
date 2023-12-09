@@ -2,7 +2,7 @@ import { CacheType, ChatInputCommandInteraction, MessageContextMenuCommandIntera
 import { getEmailRoutingAddresses } from "@/lib/cf";
 
 const command = new SlashCommandBuilder()
-    .setName('list-accounts')
+    .setName('users')
     .setDescription('Lists all cialabs accounts');
 
 export const GetAccountsCommand = {
@@ -15,7 +15,7 @@ export const GetAccountsCommand = {
             if (accounts.length === 0) {
                 await interaction.editReply('No accounts found.');
             } else {
-                const accountList = accounts.map(account => `Email: ${account.email}, Verified Status: ${account.verified}`).join('\n');
+                const accountList = accounts.map(account => `- ${account.email} ${account.verified ? '✅' : '❌'}`).join('\n');
                 await interaction.editReply(`List of accounts:\n${accountList}`);
             }
         } catch (error) {
