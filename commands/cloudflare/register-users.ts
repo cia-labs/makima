@@ -55,8 +55,8 @@ export const RegisterUser = {
                 await createCialabsEmail(
                     String(email), `${username}@cialabs.tech`
                 )
-                    .then(async err => await interaction.followUp({ content: `${username}@cialabs.tech is created`, ephemeral: true }))
-                    .catch(async err => await interaction.followUp({ content: "Something went wrong " + String(err), ephemeral: true }));
+                    .then(async err => await interaction.followUp({ content: `${username}@cialabs.tech is created` }))
+                    .catch(async err => await interaction.followUp({ content: "Something went wrong " + String(err) }));
 
             } catch (error) {
                 console.error('Error:', error);
