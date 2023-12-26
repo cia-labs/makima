@@ -21,17 +21,44 @@ export const GetAccountsCommand = {
   ) {
     try {
       const response = await getEmailRoutingAddresses();
-      const accounts = response.data.result
+      const emails = response.data.result
         .map((e) => e.matchers.find((m) => m.field === "to")?.value)
-        .filter((v) => v);
-      if (accounts.length === 0) {
+        .filter((v) => v) as string[];
+
+      const subdomains = new Map<string, string[]>();
+
+      // Group emails by subdomain or the main domain
+      emails.forEach((email) => {
+        let subdomain = "core"; // Default group for main domain emails
+        const subregex = new RegExp("@(.+)\\.cialabs\\.tech$");
+        const match = email.match(subregex);
+
+        if (match) {
+          subdomain = match[1];
+        }
+
+        if (!subdomains.has(subdomain)) {
+          subdomains.set(subdomain, []);
+        }
+        subdomains.get(subdomain)?.push(email);
+      });
+
+      // Format the output
+      let replyContent = "";
+      subdomains.forEach((emails, subdomain) => {
+        const label =
+          subdomain === "core"
+            ? "Core"
+            : subdomain.charAt(0).toUpperCase() + subdomain.slice(1);
+        replyContent += `## ${label} (${emails.length} Users)\n`;
+        replyContent += emails.join("\n");
+        replyContent += "\n\n"; // Separate each subdomain section
+      });
+
+      if (replyContent === "") {
         await interaction.reply("No accounts found.");
       } else {
-        const accountList = accounts.join("\n");
-
-        await interaction.reply({
-          content: `## ${accounts.length} Users\n${accountList}`,
-        });
+        await interaction.reply({ content: replyContent });
       }
     } catch (error) {
       console.error("Error fetching accounts:", error);
