@@ -21,18 +21,16 @@ export const GetAccountsCommand = {
   ) {
     try {
       const response = await getEmailRoutingAddresses();
-      const accounts = response.data.result;
-
+      const accounts = response.data.result
+        .map((e) => e.matchers.find((m) => m.field === "to")?.value)
+        .filter((v) => v);
       if (accounts.length === 0) {
         await interaction.reply("No accounts found.");
       } else {
-        const accountList = accounts
-          .map((e) => e.matchers.find((m) => m.field === "to")?.value)
-          .filter((v) => v)
-          .join("\n");
+        const accountList = accounts.join("\n");
 
         await interaction.reply({
-          content: `## Users\n${accountList}`,
+          content: `## ${accounts.length} Users\n${accountList}`,
         });
       }
     } catch (error) {
