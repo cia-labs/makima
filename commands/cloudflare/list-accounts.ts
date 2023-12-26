@@ -17,12 +17,13 @@ export const GetAccountsCommand = {
     interaction:
       | ChatInputCommandInteraction<CacheType>
       | MessageContextMenuCommandInteraction<CacheType>
-      | UserContextMenuCommandInteraction<CacheType>
+      | UserContextMenuCommandInteraction<CacheType>,
   ) {
     try {
       const response = await getEmailRoutingAddresses();
       const accounts = response.data.result;
-      await interaction.reply({
+
+      const status_message = await interaction.reply({
         content: `Fetching user list`,
         ephemeral: true,
       });
@@ -30,12 +31,12 @@ export const GetAccountsCommand = {
         await interaction.editReply("No accounts found.");
       } else {
         const accountList = accounts
-          .map(
-            (account) => `- ${account.email} ${account.verified ? "✅" : "❌"}`
-          )
+          .map((e) => e.matchers.find((m) => m.field === "to")?.value)
+          .filter((v) => v)
           .join("\n");
+        await status_message.delete();
         await interaction.channel?.send({
-          content: `Users:\n${accountList}`,
+          content: `## Users\n${accountList}`,
         });
       }
     } catch (error) {
