@@ -1,5 +1,6 @@
 # Makima
-Discord bot to control ark
+
+Discord bot to manage ark and cialabs accounts
 
 To install dependencies:
 
