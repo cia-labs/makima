@@ -113,7 +113,7 @@ export const RegisterUser = {
             async (response) => {
               if (response.data.success) {
                 const result = response.data.result;
-                const message = `Cloudflare Verification Email sent to:${result.email}\nCheck for a email from cloudflare and verify`;
+                const message = `Cloudflare Verification Email sent to:${result.email}\nCheck for a email from cloudflare and verify\nIgnore the part that tells you to go to email routing, I will complete that step\nJust verify and close the tab`;
                 await interaction.editReply(message);
               } else {
                 const errorMessages = response.data.errors.join("\n");
