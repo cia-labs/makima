@@ -44,27 +44,43 @@ export async function getEmailRoutingAddresses(): Promise<
     throw error;
   }
 }
+interface EmailRoutingAddress {
+  tag: string;
+  email: string;
+  verified: string;
+  created: string;
+  modified: string;
+}
 
-// export async function getEmailRoutingAddresses(): Promise<
-//   AxiosResponse<EmailRoutingAddressesResponse>
-// > {
-//   const url = `https://api.cloudflare.com/client/v4/accounts/${accountIdentifier}/email/routing/addresses`;
-//
-//   const headers = {
-//     "Content-Type": "application/json",
-//     "X-Auth-Email": authEmail,
-//     "X-Auth-Key": authKey, // You might need an authentication key here, not included in the cURL command
-//   };
-//
-//   try {
-//     const response = await axios.get<EmailRoutingAddressesResponse>(url, {
-//       headers,
-//     });
-//     return response;
-//   } catch (error) {
-//     throw error;
-//   }
-// }
+interface EmailRoutingDestinationAddressesResponse {
+  result: EmailRoutingAddress[];
+  success: boolean;
+  errors: string[];
+  messages: string[];
+}
+export async function getEmailRoutingDestinationAddresses(): Promise<
+  AxiosResponse<EmailRoutingDestinationAddressesResponse>
+> {
+  const url = `https://api.cloudflare.com/client/v4/accounts/${accountIdentifier}/email/routing/addresses`;
+
+  const headers = {
+    "Content-Type": "application/json",
+    "X-Auth-Email": authEmail,
+    "X-Auth-Key": authKey, // You might need an authentication key here, not included in the cURL command
+  };
+
+  try {
+    const response = await axios.get<EmailRoutingDestinationAddressesResponse>(
+      url,
+      {
+        headers,
+      },
+    );
+    return response;
+  } catch (error) {
+    throw error;
+  }
+}
 
 interface CreateEmailRoutingAddressResult {
   created: string;

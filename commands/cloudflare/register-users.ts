@@ -10,6 +10,7 @@ import {
   getEmailRoutingAddresses,
   createEmailRoutingAddress,
   createCialabsEmail,
+  getEmailRoutingDestinationAddresses,
 } from "@/lib/cf";
 
 const command = new SlashCommandBuilder()
@@ -69,15 +70,16 @@ export const RegisterUser = {
         content: "Invalid email format. Please provide a valid email address.",
         ephemeral: true,
       });
+      return;
     } else {
       await interaction.reply({
         content: "Checking email...",
         ephemeral: true,
       });
-      const response = await getEmailRoutingAddresses();
+      const response = await getEmailRoutingDestinationAddresses();
       const accounts = response.data.result;
 
-      await interaction.reply({
+      await interaction.editReply({
         content: "Registering user...",
       });
       try {
@@ -96,9 +98,16 @@ export const RegisterUser = {
             },
           );
 
-        const result_email = admin_roles.includes(role?.name!)
-          ? `${username}@cialabs.tech`
-          : `${username}@${role}.cialabs.tech`;
+        const result_email = (
+          admin_roles.includes(role?.name!)
+            ? `${username}@cialabs.tech`
+            : `${username}@${role?.name}.cialabs.tech`
+        )
+          .trim()
+          .toLowerCase()
+          .replaceAll(" ", ".");
+
+        console.log(result_email);
 
         await createCialabsEmail(String(email), result_email)
           .then(async () => {
