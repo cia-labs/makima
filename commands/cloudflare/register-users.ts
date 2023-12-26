@@ -60,10 +60,14 @@ export const RegisterUser = {
       allowed_roles.includes(r.name),
     );
 
-    const username = interaction.options.data.find((v) => v.name === "username")
-      ?.value;
-    const email = interaction.options.data.find((v) => v.name === "email")
-      ?.value;
+    const username = interaction.options.data
+      .find((v) => v.name === "username")
+      ?.value?.toString()
+      .trim();
+    const email = interaction.options.data
+      .find((v) => v.name === "email")
+      ?.value?.toString()
+      .trim();
 
     if (!email || !validateEmail(String(email))) {
       await interaction.reply({
@@ -73,17 +77,38 @@ export const RegisterUser = {
       return;
     } else {
       await interaction.reply({
-        content: "Checking email...",
+        content: "Checking username...",
         ephemeral: true,
+      });
+      const existing_accounts = await getEmailRoutingAddresses();
+
+      const existing_usernames = existing_accounts.data.result
+        .map((e) => e.matchers.find((m) => m.field === "to")?.value)
+        .filter((v) => v)
+        .map((u) => u?.split("@")[0]);
+
+      console.log(
+        `checking for ${username} in ${existing_usernames.join("\n")}`,
+      );
+
+      if (existing_usernames.find((u) => u === username)) {
+        await interaction.editReply({
+          content: "username already exists",
+        });
+        return;
+      }
+
+      await interaction.editReply({
+        content: "Checking email...",
       });
       const response = await getEmailRoutingDestinationAddresses();
       const accounts = response.data.result;
 
-      await interaction.editReply({
-        content: "Registering user...",
-      });
       try {
-        if (!accounts.find((acc) => acc.email === email))
+        if (!accounts.find((acc) => acc.email === email)) {
+          await interaction.editReply({
+            content: "Registering user...",
+          });
           await createEmailRoutingAddress(String(email)).then(
             async (response) => {
               if (response.data.success) {
@@ -97,6 +122,12 @@ export const RegisterUser = {
               }
             },
           );
+        } else {
+          await interaction.editReply({
+            content: "account on this email already exists",
+          });
+          return;
+        }
 
         const result_email = (
           admin_roles.includes(role?.name!)
@@ -113,6 +144,7 @@ export const RegisterUser = {
           .then(async () => {
             await interaction.followUp({
               content: `${result_email} is created, to add the email to ur gmail you can refer to https://community.cloudflare.com/t/solved-how-to-use-gmail-smtp-to-send-from-an-email-address-which-uses-cloudflare-email-routing/382769/2\nThis step is totally optional and is only so you can send emails as this new email id`,
+              ephemeral: true,
             });
 
             await interaction.followUp({
@@ -121,11 +153,12 @@ export const RegisterUser = {
               )}) you will receive all mails sent to ${result_email} will be forwarded to ${String(
                 email,
               )}`,
+              ephemeral: true,
             });
           })
           .catch(
             async (err) =>
-              await interaction.followUp({
+              await interaction.editReply({
                 content: "Something went wrong " + String(err),
               }),
           );
