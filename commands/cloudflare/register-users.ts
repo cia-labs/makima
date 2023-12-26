@@ -16,11 +16,22 @@ const command = new SlashCommandBuilder()
   .setName("register")
   .setDescription("Register a username and email")
   .addStringOption((option) =>
-    option.setName("username").setDescription("The username").setRequired(true)
+    option
+      .setName("username")
+      .setDescription("This will be used as <username>@<role>.cialabs.tech")
+      .setRequired(true),
   )
   .addStringOption((option) =>
-    option.setName("email").setDescription("The email").setRequired(true)
+    option
+      .setName("email")
+      .setDescription(
+        "Your personal gmail that all ur cia mails need to be sent to",
+      )
+      .setRequired(true),
   );
+
+const allowed_roles = ["core", "student"];
+const admin_roles = ["core"];
 
 export const RegisterUser = {
   command,
@@ -28,12 +39,14 @@ export const RegisterUser = {
     interaction:
       | ChatInputCommandInteraction<CacheType>
       | MessageContextMenuCommandInteraction<CacheType>
-      | UserContextMenuCommandInteraction<CacheType>
+      | UserContextMenuCommandInteraction<CacheType>,
   ) {
     if (
       !(
         !Array.isArray(interaction.member?.roles) &&
-        interaction.member?.roles.cache.find((r) => r.name === "core")
+        interaction.member?.roles.cache.find((r) =>
+          allowed_roles.includes(r.name),
+        )
       )
     ) {
       await interaction.reply({
@@ -42,12 +55,14 @@ export const RegisterUser = {
       });
       return;
     }
-    const username = interaction.options.data.find(
-      (v) => v.name === "username"
-    )?.value;
-    const email = interaction.options.data.find(
-      (v) => v.name === "email"
-    )?.value;
+    const role = interaction.member?.roles.cache.find((r) =>
+      allowed_roles.includes(r.name),
+    );
+
+    const username = interaction.options.data.find((v) => v.name === "username")
+      ?.value;
+    const email = interaction.options.data.find((v) => v.name === "email")
+      ?.value;
 
     if (!email || !validateEmail(String(email))) {
       await interaction.reply({
@@ -78,21 +93,32 @@ export const RegisterUser = {
                 const message = `Failed to create email routing address. Errors:\n${errorMessages}`;
                 await interaction.editReply(message);
               }
-            }
+            },
           );
 
-        await createCialabsEmail(String(email), `${username}@cialabs.tech`)
-          .then(
-            async (err) =>
-              await interaction.followUp({
-                content: `${username}@cialabs.tech is created`,
-              })
-          )
+        const result_email = admin_roles.includes(role?.name!)
+          ? `${username}@cialabs.tech`
+          : `${username}@${role}.cialabs.tech`;
+
+        await createCialabsEmail(String(email), result_email)
+          .then(async () => {
+            await interaction.followUp({
+              content: `${result_email} is created, to add the email to ur gmail you can refer to https://community.cloudflare.com/t/solved-how-to-use-gmail-smtp-to-send-from-an-email-address-which-uses-cloudflare-email-routing/382769/2\nThis step is totally optional and is only so you can send emails as this new email id`,
+            });
+
+            await interaction.followUp({
+              content: `Once you have verified your email (${String(
+                email,
+              )}) you will receive all mails sent to ${result_email} will be forwarded to ${String(
+                email,
+              )}`,
+            });
+          })
           .catch(
             async (err) =>
               await interaction.followUp({
                 content: "Something went wrong " + String(err),
-              })
+              }),
           );
       } catch (error) {
         console.error("Error:", error);
