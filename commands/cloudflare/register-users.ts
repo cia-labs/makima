@@ -12,6 +12,7 @@ import {
   createCialabsEmail,
   getEmailRoutingDestinationAddresses,
 } from "@/lib/cf";
+import { registerUser } from "@/lib/anya/users";
 
 const command = new SlashCommandBuilder()
   .setName("register")
@@ -28,6 +29,12 @@ const command = new SlashCommandBuilder()
       .setDescription(
         "Your personal gmail that all ur cia mails need to be sent to",
       )
+      .setRequired(true),
+  )
+  .addStringOption((option) =>
+    option
+      .setName("password")
+      .setDescription("Your password for CIA account")
       .setRequired(true),
   );
 
@@ -60,8 +67,20 @@ export const RegisterUser = {
       allowed_roles.includes(r.name),
     );
 
+    if (!role) {
+      await interaction.reply({
+        content: "You dont have a role assigned",
+        ephemeral: true,
+      });
+      return;
+    }
+
     const username = interaction.options.data
       .find((v) => v.name === "username")
+      ?.value?.toString()
+      .trim();
+    const password = interaction.options.data
+      .find((v) => v.name === "password")
       ?.value?.toString()
       .trim();
     const email = interaction.options.data
@@ -75,96 +94,118 @@ export const RegisterUser = {
         ephemeral: true,
       });
       return;
-    } else {
+    }
+    await interaction.reply({
+      content: "Checking username...",
+      ephemeral: true,
+    });
+    const existing_accounts = await getEmailRoutingAddresses();
+
+    const existing_usernames = existing_accounts.data.result
+      .map((e) => e.matchers.find((m) => m.field === "to")?.value)
+      .filter((v) => v)
+      .map((u) => u?.split("@")[0]);
+
+    console.log(`checking for ${username} in ${existing_usernames.join("\n")}`);
+
+    if (existing_usernames.find((u) => u === username)) {
+      await interaction.editReply({
+        content: "username already exists",
+      });
+      return;
+    }
+
+    if (!username || username.length < 3 || username.length > 15) {
       await interaction.reply({
-        content: "Checking username...",
+        content:
+          "Invalid username format. Please provide a username between 3 and 15 characters.",
         ephemeral: true,
       });
-      const existing_accounts = await getEmailRoutingAddresses();
+      return;
+    }
 
-      const existing_usernames = existing_accounts.data.result
-        .map((e) => e.matchers.find((m) => m.field === "to")?.value)
-        .filter((v) => v)
-        .map((u) => u?.split("@")[0]);
+    if (!password || password.length < 4) {
+      await interaction.reply({
+        content:
+          "Invalid password format. Please provide a password atleast 4 characters.",
+        ephemeral: true,
+      });
+      return;
+    }
 
-      console.log(
-        `checking for ${username} in ${existing_usernames.join("\n")}`,
-      );
+    await interaction.editReply({
+      content: "Checking email...",
+    });
+    const response = await getEmailRoutingDestinationAddresses();
+    const accounts = response.data.result;
 
-      if (existing_usernames.find((u) => u === username)) {
+    try {
+      if (!accounts.find((acc) => acc.email === email)) {
         await interaction.editReply({
-          content: "username already exists",
+          content: "Registering user...",
+        });
+        await createEmailRoutingAddress(String(email)).then(
+          async (response) => {
+            if (response.data.success) {
+              const result = response.data.result;
+              const message = `Cloudflare Verification Email sent to:${result.email}\nCheck for a email from cloudflare and verify\nIgnore the part that tells you to go to email routing, I will complete that step\nJust verify and close the tab`;
+              await interaction.editReply(message);
+            } else {
+              const errorMessages = response.data.errors.join("\n");
+              const message = `Failed to create email routing address. Errors:\n${errorMessages}`;
+              await interaction.editReply(message);
+            }
+          },
+        );
+        registerUser(username, password, {
+          username,
+          name: username.split(".")[0],
+          email: email,
+          discord_username: interaction.user.username,
+          role: role?.name ?? "npc",
+        });
+      } else {
+        await interaction.editReply({
+          content: "account on this email already exists",
         });
         return;
       }
 
-      await interaction.editReply({
-        content: "Checking email...",
-      });
-      const response = await getEmailRoutingDestinationAddresses();
-      const accounts = response.data.result;
+      const result_email = (
+        admin_roles.includes(role?.name!)
+          ? `${username}@cialabs.tech`
+          : `${username}@${role?.name}.cialabs.tech`
+      )
+        .trim()
+        .toLowerCase()
+        .replaceAll(" ", ".");
 
-      try {
-        if (!accounts.find((acc) => acc.email === email)) {
-          await interaction.editReply({
-            content: "Registering user...",
+      console.log(result_email);
+
+      await createCialabsEmail(String(email), result_email)
+        .then(async () => {
+          await interaction.followUp({
+            content: `${result_email} is created, to add the email to ur gmail you can refer to https://community.cloudflare.com/t/solved-how-to-use-gmail-smtp-to-send-from-an-email-address-which-uses-cloudflare-email-routing/382769/2\nThis step is totally optional and is only so you can send emails as this new email id`,
+            ephemeral: true,
           });
-          await createEmailRoutingAddress(String(email)).then(
-            async (response) => {
-              if (response.data.success) {
-                const result = response.data.result;
-                const message = `Cloudflare Verification Email sent to:${result.email}\nCheck for a email from cloudflare and verify\nIgnore the part that tells you to go to email routing, I will complete that step\nJust verify and close the tab`;
-                await interaction.editReply(message);
-              } else {
-                const errorMessages = response.data.errors.join("\n");
-                const message = `Failed to create email routing address. Errors:\n${errorMessages}`;
-                await interaction.editReply(message);
-              }
-            },
-          );
-        } else {
-          await interaction.editReply({
-            content: "account on this email already exists",
+
+          await interaction.followUp({
+            content: `Once you have verified your email (${String(
+              email,
+            )}) you will receive all mails sent to ${result_email} will be forwarded to ${String(
+              email,
+            )}`,
+            ephemeral: true,
           });
-          return;
-        }
-
-        const result_email = (
-          admin_roles.includes(role?.name!)
-            ? `${username}@cialabs.tech`
-            : `${username}@${role?.name}.cialabs.tech`
-        )
-          .trim()
-          .toLowerCase()
-          .replaceAll(" ", ".");
-
-        console.log(result_email);
-
-        await createCialabsEmail(String(email), result_email)
-          .then(async () => {
-            await interaction.followUp({
-              content: `${result_email} is created, to add the email to ur gmail you can refer to https://community.cloudflare.com/t/solved-how-to-use-gmail-smtp-to-send-from-an-email-address-which-uses-cloudflare-email-routing/382769/2\nThis step is totally optional and is only so you can send emails as this new email id`,
-              ephemeral: true,
-            });
-
-            await interaction.followUp({
-              content: `Once you have verified your email (${String(
-                email,
-              )}) you will receive all mails sent to ${result_email} will be forwarded to ${String(
-                email,
-              )}`,
-              ephemeral: true,
-            });
-          })
-          .catch(
-            async (err) =>
-              await interaction.editReply({
-                content: "Something went wrong " + String(err),
-              }),
-          );
-      } catch (error) {
-        console.error("Error:", error);
-      }
+        })
+        .catch(
+          async (err) =>
+            await interaction.editReply({
+              content: "Something went wrong " + String(err),
+            }),
+        );
+    } catch (error) {
+      console.error("Error:", error);
     }
   },
 };

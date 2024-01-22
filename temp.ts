@@ -1,53 +1,98 @@
-import axios, { AxiosResponse } from "axios";
+import { eq } from "drizzle-orm";
+import { db } from "./lib/db";
+import { user } from "./lib/db/schema";
+import { auth } from "./lib/anya/auth";
+import { getEmailRoutingAddresses } from "./lib/cf";
+import { getUserByDiscordUsername, registerUser } from "./lib/anya/users";
 
-const accountIdentifier = process.env.ACCOUNT_ID as string;
-const authEmail = process.env.ACCOUNT_EMAIL as string;
-const authKey = process.env.API_TOKEN as string;
-const zoneIdentifier = process.env.ZONE_ID as string;
+// auth
+//   .createUser({
+//     attributes: {
+//       username: "admin",
+//     },
+//     key: {
+//       providerUserId: "admin",
+//       providerId: "manual",
+//       password: "makima_admin",
+//     },
+//   })
+//   .then((user) => {
+//     console.log(user);
+//   });
 
-interface EmailRoutingRule {
-  actions: { type: string; value: string[] }[];
-  enabled: boolean;
-  matchers: {
-    field: string;
-    type: string;
-    value: string;
-  }[];
-  name: string;
-  priority: number;
-}
+// process.env.ADMIN_PASSWORD &&
+//   auth
+//     .updateKeyPassword("manual", "admin", process.env.ADMIN_PASSWORD)
+//     .then((user) => {
+//       console.log("updated key", user);
+//       auth
+//         .useKey("manual", "admin", process.env.ADMIN_PASSWORD!)
+//         .then((user) => {
+//           console.log(user);
+//         })
+//         .catch((err) => {
+//           console.log(err);
+//         });
+//     });
+//
 
-interface EmailRoutingAddressesResponse {
-  result: EmailRoutingRule[];
-  success: boolean;
-  errors: string[];
-  messages: string[];
-}
-async function getEmailRoutingAddresses(): Promise<
-  AxiosResponse<EmailRoutingAddressesResponse>
-> {
-  const url = `https://api.cloudflare.com/client/v4/zones/${zoneIdentifier}/email/routing/rules`;
+// auth.useKey("manual", "admin", "admin0617").then((user) => {
+//   console.log(user);
+//   auth.getUser(user.userId).then((user) => {
+//     console.log(user);
+//   });
+// });
 
-  const headers = {
-    "Content-Type": "application/json",
-    "X-Auth-Email": authEmail,
-    "X-Auth-Key": authKey, // You might need an authentication key here, not included in the cURL command
-  };
+// await db
+//   .update(user)
+//   .set({ discord_username: "xrehpicx" })
+//   .where(eq(user.username, "admin"));
 
-  try {
-    const response = await axios.get<EmailRoutingAddressesResponse>(url, {
-      headers,
-    });
-    return response;
-  } catch (error) {
-    throw error;
-  }
-}
+// const admin = await db.query.user.findFirst({
+//   where: (user, { eq }) => eq(user.username, "admin"),
+// });
 
-getEmailRoutingAddresses().then((res) => {
-  console.log(
-    res.data.result
-      .map((e) => e.matchers.find((m) => m.field === "to")?.value)
-      .filter((v) => v),
-  );
+// console.log(admin);
+//
+
+// getEmailRoutingAddresses().then((res) => {
+//   console.log(
+//     res.data.result
+//       .map((rule) => rule.matchers[0].value)
+//       .filter((email) => email?.endsWith("cialabs.tech")),
+//   );
+// });
+
+// [
+//   "varshini@student.cialabs.tech",
+//   "ashish@student.cialabs.tech",
+//   "likhitadr@student.cialabs.tech",
+//   "thejas@student.cialabs.tech",
+//   "sadiya@student.cialabs.tech",
+//   "raina@student.cialabs.tech",
+//   "prithvi@student.cialabs.tech",
+//   "siddiq@student.cialabs.tech",
+//   "krunal@student.cialabs.tech",
+//   "akshith.v.n@student.cialabs.tech",
+//   "vamshita@cialabs.tech",
+//   "thanmay@cialabs.tech",
+//   "john@cialabs.tech",
+//   "tejus@cialabs.tech",
+//   "ark@cialabs.tech",
+//   "surya@cialabs.tech",
+//   "raj@cialabs.tech",
+//   "vamsi@cialabs.tech",
+// ].forEach(async (email) => {
+//   const username = email.split("@")[0];
+//   console.log(username);
+//   const res = await registerUser(username, username, {
+//     username,
+//     email,
+//     role: email.endsWith("@student.cialabs.tech") ? "student" : "core",
+//   });
+//   console.log(res);
+// });
+//
+getUserByDiscordUsername("xrehpicx").then((res) => {
+  console.log(res);
 });

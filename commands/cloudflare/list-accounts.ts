@@ -8,8 +8,8 @@ import {
 import { getEmailRoutingAddresses } from "@/lib/cf";
 
 const command = new SlashCommandBuilder()
-  .setName("users")
-  .setDescription("Lists all cialabs accounts");
+  .setName("cf-users")
+  .setDescription("Lists all cialabs emails");
 
 export const GetAccountsCommand = {
   command,

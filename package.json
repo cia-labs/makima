@@ -8,8 +8,18 @@
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
+  "scripts": {
+    "start": "bun run index.js",
+    "build": "bun build .",
+    "migrate": "bunx drizzle-kit generate:mysql && bun run migrate.ts"
+  },
   "dependencies": {
+    "@lucia-auth/adapter-mysql": "^2.1.0",
     "axios": "^1.5.0",
-    "discord.js": "^14.13.0"
+    "discord.js": "^14.13.0",
+    "drizzle-kit": "^0.20.13",
+    "drizzle-orm": "^0.29.3",
+    "lucia": "^2.7.6",
+    "mysql2": "^3.7.1"
   }
 }
