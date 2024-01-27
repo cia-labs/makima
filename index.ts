@@ -3,10 +3,7 @@ import { Client, GatewayIntentBits, Partials, REST, Routes } from "discord.js";
 import { RegisterUser } from "@/commands/cloudflare/register-users";
 import { LinkDiscordtoCIA } from "./commands/users/link-discord";
 import { ListCIAAccounts } from "./commands/users/list-users";
-import {
-    addPointsByDiscordUsername,
-    getUserByDiscordUsername,
-} from "./lib/anya/users";
+import { addPointsByDiscordUsername } from "./lib/anya/users";
 import { ViewPointsCommand } from "./commands/points/show-points";
 
 const client = new Client({

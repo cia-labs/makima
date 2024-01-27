@@ -18,7 +18,7 @@ export function registerUser(
     role?: string;
     discord_username?: string;
     name?: string;
-  },
+  }
 ) {
   return auth.createUser({
     attributes: {
@@ -36,7 +36,7 @@ export function registerUser(
 
 export function updateUser(
   username: string,
-  attributes: Partial<UserAttributes>,
+  attributes: Partial<UserAttributes>
 ) {
   return db.update(user).set(attributes).where(eq(user.username, username));
 }
@@ -50,7 +50,7 @@ export function setPoints(username: string, points: number) {
 }
 export async function addPointsByDiscordUsername(
   discord_username: string,
-  points: number,
+  points: number
 ) {
   const res = await db
     .select({
